@@ -11,7 +11,6 @@ extern crate percent_encoding;
 extern crate rocket;
 
 use std::io::Cursor;
-use std::fmt::{self, Debug, Formatter};
 
 use mongo_file_center::{FileCenter, FileItem, FileData, FileCenterError, bson::oid::ObjectId};
 
@@ -19,15 +18,10 @@ use rocket::response::{self, Response, Responder};
 use rocket::request::Request;
 
 /// The response struct used for client downloading from the File Center on MongoDB.
+#[derive(Debug)]
 pub struct FileCenterDownloadResponse {
     pub file_item: FileItem,
     pub file_name: Option<String>,
-}
-
-impl Debug for FileCenterDownloadResponse {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        f.write_fmt(format_args!("FileCenterDownloadResponse {{file_name: {:?}, file_item: {:?}}}", self.file_name, self.file_item))
-    }
 }
 
 impl Responder<'static> for FileCenterDownloadResponse {
