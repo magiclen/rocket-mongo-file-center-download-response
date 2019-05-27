@@ -21,9 +21,7 @@ const PORT: u16 = 27017;
 
 #[get("/<id_token>")]
 fn download(file_center: State<FileCenter>, id_token: ShortCryptUrlComponent) -> Result<Option<FileCenterDownloadResponse>, FileCenterError> {
-    let id = file_center.decrypt_id_token(id_token.get_short_crypt_url_component())?;
-
-    FileCenterDownloadResponse::from_object_id(file_center.inner(), &id, None::<String>)
+    FileCenterDownloadResponse::from_id_token(file_center.inner(), id_token.into_string(), None::<String>)
 }
 
 fn main() {
