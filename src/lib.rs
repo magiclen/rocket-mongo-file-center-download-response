@@ -25,28 +25,41 @@ pub struct FileCenterDownloadResponse {
 }
 
 impl FileCenterDownloadResponse {
+    /// Create a `FileCenterDownloadResponse` instance from a file item.
+    #[inline]
+    pub fn from_file_item<S: Into<String>>(file_item: FileItem, file_name: Option<S>) -> Result<Option<FileCenterDownloadResponse>, FileCenterError> {
+        let file_name = file_name.map(|file_name| file_name.into());
+
+        Ok(Some(FileCenterDownloadResponse {
+            file_name,
+            file_item,
+        }))
+    }
+
     /// Create a `FileCenterDownloadResponse` instance from the object ID.
     pub fn from_object_id<S: Into<String>>(file_center: &FileCenter, id: &ObjectId, file_name: Option<S>) -> Result<Option<FileCenterDownloadResponse>, FileCenterError> {
         let file_item = file_center.get_file_item_by_id(id)?;
 
         match file_item {
             Some(file_item) => {
-                let file_name = file_name.map(|file_name| file_name.into());
-
-                Ok(Some(FileCenterDownloadResponse {
-                    file_name,
-                    file_item,
-                }))
+                Self::from_file_item(file_item, file_name)
             }
             None => Ok(None)
         }
     }
 
     /// Create a `FileCenterDownloadResponse` instance from an ID token.
+    #[inline]
     pub fn from_id_token<T: AsRef<str> + Into<String>, S: Into<String>>(file_center: &FileCenter, id_token: T, file_name: Option<S>) -> Result<Option<FileCenterDownloadResponse>, FileCenterError> {
         let id = file_center.decrypt_id_token(id_token.as_ref())?;
 
         Self::from_object_id(file_center, &id, file_name)
+    }
+
+    #[inline]
+    /// Check if the file item is temporary.
+    pub fn is_temporary(&self) -> bool {
+        self.file_item.get_expiration_time().is_some()
     }
 }
 
