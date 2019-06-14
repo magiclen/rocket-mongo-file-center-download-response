@@ -27,13 +27,13 @@ pub struct FileCenterDownloadResponse {
 impl FileCenterDownloadResponse {
     /// Create a `FileCenterDownloadResponse` instance from a file item.
     #[inline]
-    pub fn from_file_item<S: Into<String>>(file_item: FileItem, file_name: Option<S>) -> Result<Option<FileCenterDownloadResponse>, FileCenterError> {
+    pub fn from_file_item<S: Into<String>>(file_item: FileItem, file_name: Option<S>) -> FileCenterDownloadResponse {
         let file_name = file_name.map(|file_name| file_name.into());
 
-        Ok(Some(FileCenterDownloadResponse {
+        FileCenterDownloadResponse {
             file_name,
             file_item,
-        }))
+        }
     }
 
     /// Create a `FileCenterDownloadResponse` instance from the object ID.
@@ -42,7 +42,7 @@ impl FileCenterDownloadResponse {
 
         match file_item {
             Some(file_item) => {
-                Self::from_file_item(file_item, file_name)
+                Ok(Some(Self::from_file_item(file_item, file_name)))
             }
             None => Ok(None)
         }

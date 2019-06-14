@@ -1,6 +1,6 @@
 [package]
 name = "rocket-mongo-file-center-download-response"
-version = "0.4.0"
+version = "0.5.0"
 authors = ["Magic Len <len@magiclen.org>"]
 repository = "https://github.com/magiclen/rocket-mongo-file-center-download-response"
 homepage = "https://magiclen.org/rocket-mongo-file-center-download-response"
