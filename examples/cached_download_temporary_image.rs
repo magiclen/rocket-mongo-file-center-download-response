@@ -9,8 +9,10 @@ extern crate validators;
 
 use std::path::Path;
 
+use rocket_mongo_file_center_download_response::mongo_file_center::{
+    mime, FileCenter, FileCenterError,
+};
 use rocket_mongo_file_center_download_response::FileCenterDownloadResponse;
-use rocket_mongo_file_center_download_response::mongo_file_center::{FileCenter, FileCenterError, mime};
 
 use rocket::request::State;
 
@@ -20,8 +22,15 @@ const HOST: &str = "localhost";
 const PORT: u16 = 27017;
 
 #[get("/<id_token>")]
-fn download(file_center: State<FileCenter>, id_token: ShortCryptUrlComponent) -> Result<Option<FileCenterDownloadResponse>, FileCenterError> {
-    FileCenterDownloadResponse::from_id_token(file_center.inner(), id_token.into_string(), None::<String>)
+fn download(
+    file_center: State<FileCenter>,
+    id_token: ShortCryptUrlComponent,
+) -> Result<Option<FileCenterDownloadResponse>, FileCenterError> {
+    FileCenterDownloadResponse::from_id_token(
+        file_center.inner(),
+        id_token.into_string(),
+        None::<String>,
+    )
 }
 
 fn main() {
@@ -31,7 +40,9 @@ fn main() {
 
     let path = Path::join(Path::new("examples"), Path::join(Path::new("images"), "image(貓).jpg"));
 
-    let file = file_center.put_file_by_path_temporarily(path, None::<String>, Some(mime::IMAGE_JPEG)).unwrap();
+    let file = file_center
+        .put_file_by_path_temporarily(path, None::<String>, Some(mime::IMAGE_JPEG))
+        .unwrap();
 
     let id_token = file_center.encrypt_id(file.get_object_id());
 
