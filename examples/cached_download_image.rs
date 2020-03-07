@@ -18,8 +18,7 @@ use rocket::request::State;
 
 use validators::short_crypt_url_component::ShortCryptUrlComponent;
 
-const HOST: &str = "localhost";
-const PORT: u16 = 27017;
+const URI: &str = "mongodb://localhost:27017";
 
 #[get("/<id_token>")]
 fn download(
@@ -36,7 +35,7 @@ fn download(
 fn main() {
     let database = "test_rocket_mongo_file_center_download_response";
 
-    let file_center = FileCenter::new(HOST, PORT, database).unwrap();
+    let file_center = FileCenter::new(URI, database).unwrap();
 
     let path = Path::join(Path::new("examples"), Path::join(Path::new("images"), "image(貓).jpg"));
 
