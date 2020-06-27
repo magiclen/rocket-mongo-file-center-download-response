@@ -1,6 +1,6 @@
 [package]
 name = "rocket-mongo-file-center-download-response"
-version = "0.6.1"
+version = "0.6.2"
 authors = ["Magic Len <len@magiclen.org>"]
 edition = "2018"
 repository = "https://github.com/magiclen/rocket-mongo-file-center-download-response"
@@ -10,6 +10,7 @@ categories = ["web-programming"]
 description= "This crate provides a response struct used for client downloading from the File Center on MongoDB."
 readme = "README.md"
 license = "MIT"
+include = ["src/**/*", "Cargo.toml"]
 
 [badges.travis-ci]
 repository = "magiclen/rocket-mongo-file-center-download-response"
