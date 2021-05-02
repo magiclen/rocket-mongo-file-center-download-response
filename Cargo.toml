@@ -1,6 +1,6 @@
 [package]
 name = "rocket-mongo-file-center-download-response"
-version = "0.6.3"
+version = "0.7.0"
 authors = ["Magic Len <len@magiclen.org>"]
 edition = "2018"
 repository = "https://github.com/magiclen/rocket-mongo-file-center-download-response"
@@ -17,11 +17,16 @@ repository = "magiclen/rocket-mongo-file-center-download-response"
 branch = "master"
 
 [dependencies]
-rocket = "0.4.2"
-percent-encoding = "2"
+rocket = { git = "https://github.com/SergioBenitez/Rocket", version = "0.5.0-dev" }
+url-escape = "0.1"
 
-mongo-file-center = "0.4"
+mongo-file-center = "0.5"
 
-[dev-dependencies.validators]
-version = ">=0.19,<0.21"
-features = ["rocketly"]
+[dev-dependencies]
+validators = { git = "https://github.com/magiclen/validators", version = "0.23" }
+
+[dev-dependencies.validators-derive]
+version = "0.23"
+git = "https://github.com/magiclen/validators"
+default-features = false
+features = ["base64_url", "rocket"]

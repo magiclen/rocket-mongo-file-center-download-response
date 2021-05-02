@@ -7,23 +7,19 @@ See `examples`.
 */
 
 pub extern crate mongo_file_center;
-extern crate percent_encoding;
 extern crate rocket;
+extern crate url_escape;
 
-use std::io::Cursor;
+use std::io::{self, Cursor, ErrorKind, Read};
+use std::pin::Pin;
+use std::task::{Context, Poll};
 
-use mongo_file_center::{bson::oid::ObjectId, FileCenter, FileCenterError, FileData, FileItem};
+use mongo_file_center::mongodb_cwal::oid::ObjectId;
+use mongo_file_center::{FileCenter, FileCenterError, FileData, FileItem};
 
 use rocket::request::Request;
 use rocket::response::{self, Responder, Response};
-
-use percent_encoding::{AsciiSet, CONTROLS};
-
-const FRAGMENT_PERCENT_ENCODE_SET: &AsciiSet =
-    &CONTROLS.add(b' ').add(b'"').add(b'<').add(b'>').add(b'`');
-
-const PATH_PERCENT_ENCODE_SET: &AsciiSet =
-    &FRAGMENT_PERCENT_ENCODE_SET.add(b'#').add(b'?').add(b'{').add(b'}');
+use rocket::tokio::io::{AsyncRead, ReadBuf};
 
 /// The response struct used for responding raw data from the File Center on MongoDB with **Etag** cache.
 #[derive(Debug)]
@@ -80,26 +76,20 @@ impl FileCenterDownloadResponse {
     }
 }
 
-impl Responder<'static> for FileCenterDownloadResponse {
-    fn respond_to(self, _: &Request) -> response::Result<'static> {
+impl<'r, 'o: 'r> Responder<'r, 'o> for FileCenterDownloadResponse {
+    fn respond_to(self, _: &'r Request<'_>) -> response::Result<'o> {
         let mut response = Response::build();
 
-        let file_name = self
-            .file_name
-            .as_ref()
-            .map(|file_name| file_name.as_str())
-            .unwrap_or_else(|| self.file_item.get_file_name());
+        let file_name = self.file_name.as_deref().unwrap_or_else(|| self.file_item.get_file_name());
 
         if file_name.is_empty() {
             response.raw_header("Content-Disposition", "attachment");
         } else {
-            response.raw_header(
-                "Content-Disposition",
-                format!(
-                    "attachment; filename*=UTF-8''{}",
-                    percent_encoding::percent_encode(file_name.as_bytes(), PATH_PERCENT_ENCODE_SET)
-                ),
-            );
+            let mut v = String::from("attachment; filename*=UTF-8''");
+
+            url_escape::encode_component_to_string(file_name, &mut v);
+
+            response.raw_header("Content-Disposition", v);
         }
 
         response.raw_header("Content-Type", self.file_item.get_mime_type().to_string());
@@ -108,15 +98,35 @@ impl Responder<'static> for FileCenterDownloadResponse {
 
         match self.file_item.into_file_data() {
             FileData::Collection(v) => {
-                response.sized_body(Cursor::new(v));
+                response.sized_body(v.len(), Cursor::new(v));
             }
             FileData::GridFS(g) => {
                 response.raw_header("Content-Length", file_size.to_string());
 
-                response.streamed_body(g);
+                response.streamed_body(AsyncReader(g));
             }
         }
 
         response.ok()
+    }
+}
+
+struct AsyncReader<R>(R);
+
+impl<R: Read + Unpin> AsyncRead for AsyncReader<R> {
+    fn poll_read(
+        mut self: Pin<&mut Self>,
+        _: &mut Context<'_>,
+        buf: &mut ReadBuf<'_>,
+    ) -> Poll<Result<(), io::Error>> {
+        match self.0.read(buf.initialize_unfilled()) {
+            Ok(c) => {
+                buf.advance(c);
+
+                Poll::Ready(Ok(()))
+            }
+            Err(ref e) if e.kind() == ErrorKind::WouldBlock => Poll::Pending,
+            Err(e) => Poll::Ready(Err(e)),
+        }
     }
 }
