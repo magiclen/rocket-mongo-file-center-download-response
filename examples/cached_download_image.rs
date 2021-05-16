@@ -25,7 +25,7 @@ struct ShortCryptUrlComponent(pub(crate) String);
 
 #[get("/<id_token>")]
 fn download(
-    file_center: State<FileCenter>,
+    file_center: &State<FileCenter>,
     id_token: ShortCryptUrlComponent,
 ) -> Result<Option<FileCenterDownloadResponse>, Status> {
     FileCenterDownloadResponse::from_id_token(file_center.inner(), id_token.0, None::<String>)
