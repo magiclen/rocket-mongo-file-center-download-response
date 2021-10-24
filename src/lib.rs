@@ -23,7 +23,7 @@ use mongo_file_center::{FileCenter, FileCenterError, FileData, FileItem};
 use rocket::request::Request;
 use rocket::response::{self, Responder, Response};
 
-/// The response struct used for responding raw data from the File Center on MongoDB with **Etag** cache.
+/// The response struct used for client downloading from the File Center on MongoDB.
 #[derive(Debug)]
 pub struct FileCenterDownloadResponse {
     file_name: Option<String>,
