@@ -13,13 +13,16 @@ license = "MIT"
 include = ["src/**/*", "Cargo.toml", "README.md", "LICENSE"]
 
 [dependencies]
+tokio-util = { version = "0.6.8", features = ["io"] }
 rocket = "0.5.0-rc.1"
-url-escape = "0.1"
 
-mongo-file-center = { git = "https://github.com/magiclen/mongo-file-center" }
+mongo-file-center = "0.6.2"
+
+url-escape = "0.1"
 
 [dev-dependencies]
 validators = "0.23"
+slash-formatter = "3.1.2"
 
 [dev-dependencies.validators-derive]
 version = "0.23"

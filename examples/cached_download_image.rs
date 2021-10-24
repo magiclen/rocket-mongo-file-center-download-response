@@ -3,8 +3,7 @@ extern crate rocket;
 
 extern crate rocket_mongo_file_center_download_response;
 
-#[macro_use]
-extern crate validators_derive;
+mod common;
 
 use std::error::Error;
 use std::path::Path;
@@ -15,32 +14,28 @@ use rocket_mongo_file_center_download_response::FileCenterDownloadResponse;
 use rocket::http::Status;
 use rocket::State;
 
-use validators::prelude::*;
-
-const URI: &str = "mongodb://localhost:27017/test_rocket_mongo_file_center_download_response";
-
-#[derive(Debug, Clone, Validator)]
-#[validator(base64_url(padding(NotAllow)))]
-struct ShortCryptUrlComponent(pub(crate) String);
+use common::*;
 
 #[get("/<id_token>")]
-fn download(
+async fn download(
     file_center: &State<FileCenter>,
     id_token: ShortCryptUrlComponent,
 ) -> Result<Option<FileCenterDownloadResponse>, Status> {
     FileCenterDownloadResponse::from_id_token(file_center.inner(), id_token.0, None::<String>)
+        .await
         .map_err(|_| Status::InternalServerError)
 }
 
 #[rocket::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    let file_center = FileCenter::new(URI)?;
+    let file_center =
+        FileCenter::new(get_mongodb_uri("test_rocket_mongo_file_center_download_response")).await?;
 
-    let path = Path::join(Path::new("examples"), Path::join(Path::new("images"), "image(貓).jpg"));
+    let path = Path::new("examples").join("images").join("image(貓).jpg");
 
-    let file = file_center.put_file_by_path(path, None::<String>, Some(mime::IMAGE_JPEG))?;
+    let file = file_center.put_file_by_path(path, None::<String>, Some(mime::IMAGE_JPEG)).await?;
 
-    let id_token = file_center.encrypt_id(file.get_object_id());
+    let id_token = file_center.encrypt_id(file);
 
     println!("The ID token is: {}", id_token);
 

@@ -6,21 +6,22 @@ This crate provides a response struct used for client downloading from the File 
 See `examples`.
 */
 
+extern crate tokio_util;
+
 pub extern crate mongo_file_center;
+
 extern crate rocket;
 extern crate url_escape;
 
-mod async_reader;
-
 use std::io::Cursor;
 
-use mongo_file_center::mongodb_cwal::oid::ObjectId;
+use tokio_util::io::StreamReader;
+
+use mongo_file_center::bson::oid::ObjectId;
 use mongo_file_center::{FileCenter, FileCenterError, FileData, FileItem};
 
 use rocket::request::Request;
 use rocket::response::{self, Responder, Response};
-
-use async_reader::AsyncReader;
 
 /// The response struct used for responding raw data from the File Center on MongoDB with **Etag** cache.
 #[derive(Debug)]
@@ -45,12 +46,12 @@ impl FileCenterDownloadResponse {
     }
 
     /// Create a `FileCenterDownloadResponse` instance from the object ID.
-    pub fn from_object_id<S: Into<String>>(
+    pub async fn from_object_id<S: Into<String>>(
         file_center: &FileCenter,
-        id: &ObjectId,
+        id: ObjectId,
         file_name: Option<S>,
     ) -> Result<Option<FileCenterDownloadResponse>, FileCenterError> {
-        let file_item = file_center.get_file_item_by_id(id)?;
+        let file_item = file_center.get_file_item_by_id(id).await?;
 
         match file_item {
             Some(file_item) => Ok(Some(Self::from_file_item(file_item, file_name))),
@@ -60,14 +61,14 @@ impl FileCenterDownloadResponse {
 
     /// Create a `FileCenterDownloadResponse` instance from an ID token.
     #[inline]
-    pub fn from_id_token<T: AsRef<str> + Into<String>, S: Into<String>>(
+    pub async fn from_id_token<I: AsRef<str> + Into<String>, S: Into<String>>(
         file_center: &FileCenter,
-        id_token: T,
+        id_token: I,
         file_name: Option<S>,
     ) -> Result<Option<FileCenterDownloadResponse>, FileCenterError> {
         let id = file_center.decrypt_id_token(id_token.as_ref())?;
 
-        Self::from_object_id(file_center, &id, file_name)
+        Self::from_object_id(file_center, id, file_name).await
     }
 
     #[inline]
@@ -98,13 +99,13 @@ impl<'r, 'o: 'r> Responder<'r, 'o> for FileCenterDownloadResponse {
         let file_size = self.file_item.get_file_size();
 
         match self.file_item.into_file_data() {
-            FileData::Collection(v) => {
+            FileData::Buffer(v) => {
                 response.sized_body(v.len(), Cursor::new(v));
             }
-            FileData::GridFS(g) => {
+            FileData::Stream(g) => {
                 response.raw_header("Content-Length", file_size.to_string());
 
-                response.streamed_body(AsyncReader::from(g));
+                response.streamed_body(StreamReader::new(g));
             }
         }
 
