@@ -1,8 +1,6 @@
 #[macro_use]
 extern crate rocket;
 
-extern crate rocket_mongo_file_center_download_response;
-
 mod common;
 
 use std::error::Error;

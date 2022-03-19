@@ -6,12 +6,7 @@ This crate provides a response struct used for client downloading from the File 
 See `examples`.
 */
 
-extern crate tokio_util;
-
 pub extern crate mongo_file_center;
-
-extern crate rocket;
-extern crate url_escape;
 
 use std::io::Cursor;
 
