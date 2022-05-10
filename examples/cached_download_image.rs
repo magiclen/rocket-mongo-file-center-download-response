@@ -39,7 +39,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     println!();
 
-    rocket::build().manage(file_center).mount("/", routes![download]).launch().await?;
+    let _ = rocket::build().manage(file_center).mount("/", routes![download]).launch().await?;
 
     Ok(())
 }
