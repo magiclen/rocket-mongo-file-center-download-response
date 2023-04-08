@@ -10,13 +10,12 @@ pub extern crate mongo_file_center;
 
 use std::io::Cursor;
 
+use mongo_file_center::{bson::oid::ObjectId, FileCenter, FileCenterError, FileData, FileItem};
+use rocket::{
+    request::Request,
+    response::{self, Responder, Response},
+};
 use tokio_util::io::StreamReader;
-
-use mongo_file_center::bson::oid::ObjectId;
-use mongo_file_center::{FileCenter, FileCenterError, FileData, FileItem};
-
-use rocket::request::Request;
-use rocket::response::{self, Responder, Response};
 
 /// The response struct used for client downloading from the File Center on MongoDB.
 #[derive(Debug)]
@@ -96,12 +95,12 @@ impl<'r, 'o: 'r> Responder<'r, 'o> for FileCenterDownloadResponse {
         match self.file_item.into_file_data() {
             FileData::Buffer(v) => {
                 response.sized_body(v.len(), Cursor::new(v));
-            }
+            },
             FileData::Stream(g) => {
                 response.raw_header("Content-Length", file_size.to_string());
 
                 response.streamed_body(StreamReader::new(g));
-            }
+            },
         }
 
         response.ok()

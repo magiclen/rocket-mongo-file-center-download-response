@@ -3,16 +3,14 @@ extern crate rocket;
 
 mod common;
 
-use std::error::Error;
-use std::path::Path;
-
-use rocket_mongo_file_center_download_response::mongo_file_center::{mime, FileCenter};
-use rocket_mongo_file_center_download_response::FileCenterDownloadResponse;
-
-use rocket::http::Status;
-use rocket::State;
+use std::{error::Error, path::Path};
 
 use common::*;
+use rocket::{http::Status, State};
+use rocket_mongo_file_center_download_response::{
+    mongo_file_center::{mime, FileCenter},
+    FileCenterDownloadResponse,
+};
 
 #[get("/<id_token>")]
 async fn download(
