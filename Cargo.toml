@@ -9,7 +9,6 @@ homepage = "https://magiclen.org/rocket-mongo-file-center-download-response"
 keywords = ["rocket", "server", "web", "mongodb", "etag"]
 categories = ["web-programming"]
 description = "This crate provides a response struct used for client downloading from the File Center on MongoDB."
-readme = "README.md"
 license = "MIT"
 include = ["src/**/*", "Cargo.toml", "README.md", "LICENSE"]
 
